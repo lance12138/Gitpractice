@@ -1,7 +1,1 @@
-# Gitpractice
-just a demo
-demo
-version1
-哈哈哈哈哈
-versio
-
+# this is a demo on HTML5 which be used in takephoto
