@@ -1,0 +1,323 @@
+==================================================================
+与Mybatis相关
+==================================================================
+1，一级缓存
+mybatis的一级缓存是sqlsession级别的缓存，和hibernate相似都是session级别的缓存，每次在查询的时候查找缓存中是否有该查询的缓存存在，如果不存在，就在sqlsession缓存中添加该查询，下次再次查询的时候直接从缓存中取出，不会去查询数据库，当执行了删除、更新、插入语句时将缓存清空。该缓存就相当于一个map，有一个缓存有唯一的id，相当于key，和缓存内容相当于value。每新增一个缓存就在map中新增一个element。一级缓存不可以被不同session共享。
+2，mybatis除了select外，update、delete、insert都可以不需要有paramType。
+==================================================================
+ 与Hibernate相关
+==================================================================
+1->数据库方言和hql
+ 1)方言： 
+  而数据库方言dialect则是将hql语句翻译成sql语句的保证；
+
+ 2)hql：而hql则是对象语言，hibernate会结合配置文件和dialect将hql语句翻译成sql语句，这么做是如果你不得不更改数据库时可以减少很多不必要的步骤
+   比如你如果用jdbc则很可能每一条sql语句都要更改，而用了hibernate，你只需要更改加载驱动密码什么的少量配置。
+2->cascade级联
+  一般多对多，多对一不使用级联，而一对多和一对一可以使用级联；
+
+
+hibernate如果操作大量数据，需考虑内存问题，要防止session内存溢出，解决方法，在合理的范围内存入一定量数据，接着就先刷出flush，再将session清空缓存clear；
+
+
+连接池是存储、管理数据库连接的容器，应用程序把获取数据库连接的功能委托给连接池，每个连接池都有一个上限，如果连接池达到上限，应用程序线程申请连接时被堵塞，等待其他线程释放连接，每个线程使用完连接后并不马上关闭，至少把它返还给连接池。由于连接的共享，不会频繁的创建、销毁连接，因此就不会增加创建连接的开销
+数据库连接是一种关键的有限的昂贵的资源，这一点在多用户的网页应用程序中体现得尤为突出。对数据库连接的管理能显著影响到整个应用程序的伸缩性和健壮性，影响到程序的性能指标
+连接池基本的思想是在系统初始化的时候，将数据库连接作为对象存储在内存中，当用户需要访问数据库时，并非建立一个新的连接，而是从连接池中取出一个已建立的空闲连接对象。使用完毕后，用户也并非将连接关闭，而是将连接放回连接池中，以供下一个请求访问使用
+
+
+
+===================================================================
+与java基础相关
+===================================================================
+1->jvm垃圾回收机制
+gc是jvm对那些没有被使用的对象的内存空间清除，通过判断这些对象有没有被其他活动对象引用来判断这些对象是否需要清除，jvm用引用计数和对象遍历引用的方法来实现。
+
+引用计数：堆中每一个对象都有一个引用计数，当对象被创建时，会给该对象的变量设置为1，当任何其他变量被赋值为这个对象的引用时，该变量加1，当超过该对象的生命周期时减1当变量为零时对象被回收。
+跟踪收集器
+沿着整个对象图上的每一条链接，递归确定可到达的对象。如果某对象不能从这些根对象一个到达，则将他作为垃圾回收。
+标记清扫
+首先停止所有工作，从根集遍历所有被引用的节点，然后进行标记，最后恢复所有工作。没有被标记的作为回收对象被回收。
+2 java内存泄漏
+gc是回收那些不可达，没有被引用了的对象，然而有垃圾回收机制还是会存在内存泄漏，当我们new了一个对象，用完之后却再也不用了，该对象的内存还一直留在堆里面，但是gc无法回收它，因为它是可达的，这时这块内存一直被占用，就出现了内存泄漏，
+
+	比如 vector v=new vector();
+	        for(int i=0;i<10;i++){
+		object o=new object();
+		v.add(o);
+		o=null;
+		}	
+此时，我们对o清空了，按理说o会被gc回收，但是对象v对o引用了，gc不会去回收它，o一直被v引用，这时就出现了内存泄漏，解决的办法，1，正确创建对象的作用域，那些只用一次的直接就定义成员变量；2 用完之后直接手动清空 v=null；
+
+3->abstract 和interface
+abstract抽象类，是我们发现有共同的方法或属性时，我们都会向上抽取，但是都有同样的方法有可能实现不同，这时候我们也就不能直接给抽取的方法来写具体方法，所以我们定义抽象方法，只提供方法，没有方法体，在方法前加抽象关键字abstract，有抽象方法的类体也要加上abstract关键字，在抽象类里面可以定义实例方法，定义成员变量。其他类可以继承该抽象类来实现具体方法。
+
+而interface是接口，可以看成是特殊的抽象类，在接口里面全是抽象方法，在接口里面不可以定义成员变量，只有静态变量，如果你定义（例如 int a=1；）虚拟机会自动加上static final int a=1；interface要通过其他调用类来实现（implements）该接口，使用implements关键字，一个类可以实现多个接口，从某种意义上解决了类不可以多继承的缺陷。
+ 
+abstract抽象类只能单继承，而interface可以继承多个接口。
+4->XML的四种解析方式
+	1.dom解析，dom（document object model）文档对象模型，在应用中基于dom解析XML文件，将一个XML文件转化成一个对象模型的集合（dom树）。dom采用一种通过分层对象模型来访问XML文档信息的方式，将XML信息构成一个结点树，dom解析提供随机访问方式，给应用程序开发提供极大方便，但是dom解析需要将文件整个加载到内存中，对cpu的要求相对较高，实现效率不是十分理想。
+	2.sax解析，与dom解析不同，sax解析是顺序的，就是从上到下的顺序解析方式，它比dom解析更快，效率更高，它是逐行扫描文档，一般扫描一边解析。而且sax可以在解析文档的任意时刻停止解析。但是，sax不具有记忆性，在扫描或者解析完上一行之后要再用到就需要再解析一次。
+	3.Jdom解析，把dom的结点树和sax的顺序解析结合起来。
+	4，dom4j解析，
+5->jdk动态代理
+	1.首先jdk动态代理要用到invocationHandler，proxy。首先提供要代理对象target，用自己的handler实现invocationHandler，实现invoke方法
+在invoke方法里面调用你需要织入的方法，接着调用method自己的invoke方法。
+	如下代码：
+	import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+public class testHandler implements InvocationHandler{
+
+	private Object target;
+	public testHandler(Object target){
+		this.target=target;
+	}
+	public void before(){
+		System.out.println("save before");
+	}
+	public void after(){
+		System.out.println("saved after");
+	}
+	public Object invoke(Object proxy, Method method, Object[] args)
+			throws Throwable {
+		// TODO Auto-generated method stub
+		before();
+		method.invoke(target, args);
+		after();
+		return null;
+	}
+
+}
+接着在main方法里面new你需要代理的对象，new你自己的handler，实例化proxy：
+如下代码：
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		userDAO userdao=new userImpl();
+		testHandler handler=new testHandler(userdao);
+		userDAO userproxy=(userDAO)Proxy.newProxyInstance(userdao.getClass().getClassLoader(), new Class[]{userDAO.class,personDAO.class}, handler);
+		 userproxy.save();
+		 userproxy.talk();
+	}
+Spring的AOP实例：
+首先引入相关jar包；
+相关名词：pointcut；jionpoint；Aspect；Target；weave；
+pointcut：切入点，定义要植入方法的地方，如在某些个方法前定义一个pointcut，如@pointcut（"execute(public * com.jxust.test.dao ..*.*(..))" ）；
+jionpoint：植入点，是pointcut里面的一个，
+Aspect：切面；
+Target：代理目标对象；
+weave：植入；
+使用：
+首先引入相关jar包，Aspectjrt.jar；aspectjweaver.jar;  
+然后在applicationContext.xml文件中添加<aop:aspectj-autoproxy/>，然后在你要植入的类填上@Aspect注解在在特定的植入方法上按需求加上@before，@afterResult,@AfterThrowing语法同上，还可以定义一个@pointcut ，@pointcut（"execute(public * com.jxust.test.dao ..*.*(..))" ）：
+具体实现：
+	@pointcut（"execute(public * com.jxust.test.dao ..*.*(..))" ）
+	public void mymethod(){};
+	@Before("mymethod()");
+	public void before(){system.out.println("method before");}
+	@AfterThrowing("mymethod()");
+	public void after(){System.out.println("method after");}
+意思就是定义一个切入点pointcut，这个切入点用mymethod（）实现，你所有的要植入的方法都可以织入到这个切入点上。
+动态代理好处在于，不需要修改方法，proxy不需要知道这个方法，和如何实现的，甚至都不知道有没有这个方法，直接调用外部你需要植入的方法，当然你也可以用组合的方式来实现不改变内部方法，但是如果你需要大面积添加，动态代理是一个最好的方法。
+
+session创建和生命周期
+	用户首次与服务器建立连接时，服务器就会创建一个session，同时分配一个唯一的sessionid，用来标志用户的唯一身份。该sessionid可以同过set-cookie传回客户端，或者通过url的方式传回客户端。
+当某个页面发出请求，并且已经设置session=“true”，然后servlet容器将jsp翻译成servlet加载并执行，接着httpservletrequest对象根据cookie或者url中是否存在jsessionId来觉得是绑定当前session还是创建一个新的session，如果是创建一个新的session，可以通过以cookie的方式或者url重写的方式返回客户端。
+cookie和session的区别。
+1.session是由服务器端维护的存储空间，而cookie是由客户端浏览器维护。
+2.用户可以通过浏览器关闭cookie，因为cookie具有安全性问题，所以一般需要将数据加密处理。
+3.session底层用的是concurrentHashmap，也就是一个个的键值对，存储的是对象，而cookie保存的是一段文本字符串。
+4.cookie和session都有失效时间，一般都是cookie和session配合使用。
+cookie
+1）设置该 Cookie 不能被脚本读取，这样在一定程度上解决上述问题。
+　　2）对 Cookie 内容进行加密，在加密前嵌入时间戳，保证每次加密后的密文都不一样（并且可以防止消息重放）。
+　　3）客户端请求时，每次或定时更新 Cookie 内容（即：基于第2小条，重新加密）
+　　4）每次向 Cookie 写入时间戳，数据库需要记录最后一次时间戳（防止 Cookie 篡改，或重放攻击）。
+　　5）客户端提交 Cookie 时，先解密然后校验时间戳，时间戳若小于数据数据库中记录，即意味发生攻击。
+
+分布式session共享：使用cachedb存储session信息。
+====================================================================
+与数据结构相关
+====================================================================
+1->平衡二叉树
+ ------1)左右子树都是平衡二叉树；
+ ------2)每一个非终端结点的左右子树的深度之差的绝对值不大于1；
+2->B-树
+性质：M阶B-树是多路搜索树（并不是二叉的）
+ ------1)定义任意非叶子结点的子结点数最多有M个，而M>2个；
+-------2)根结点儿子数[2,M]个;
+-------3)除根结点外其他非叶子结点数为[M/2,M]个；
+-------4)每个结点存放关键字最少M/2（向上取）-1个，最多M-1个关键字（至少2个关键字）；
+-------5)非叶子结点关键字数=指向儿子的指针数-1；
+-------6)非叶子结点的关键字：K[1],K[2],..........K[M-1];且K[i]<K[i+1];
+-------7)非叶子结点的指针：P[1],P[2],........,P[M];其中P[1]指向关键字小于K[1]的子树，P[M]指向关键字大于K[M-1]的子树，其他P[i]指向关键字在K[i-1]到K[i]的子树；
+-------8)所有叶子结点位于同一层；
+搜索：从根结点开始，对结点内的关键字（有序）序列进行二分查找，如果命中则结束，如果在根结点没有命中，则进入子结点继续二分查找，直到所对应的子结点为空，或者命中；
+=====================================================================
+与安卓基础有关                        视频解压码:www.mfhk8.com
+=====================================================================
+一般实现按钮点击事件四种方法
+
+1)button.setOnclickListener(new myListener());
+      private void myListener(){
+        public void onclick(){
+
+		}
+	}
+2)button.setOnclickListener(new OnclickListener(
+		{
+			public void onclick(){
+
+		}
+
+		});
+3)在activity主类中实现OncilckListener接口；然后实现onclick方法；在方法中用switch方法来实现多个点击事件转换；用的最实用！！！
+4)在activity_main.xml配置里面配置Android：onclick="方法名";然后在activity中创建相应的方法；
+
+
+getFilesDir()获取/data/data/当前apk/的文件夹通过context.getApplication().getFilesDir().getAbsolutePath();得到当前路径；
+getcacheDir()获取/data/data/当前apk下面的cache缓存文件夹;
+
+openFileOutputStream(name,model);//
+mode:
+	1,mode_PRIVATE;私有，不允许其他程序读或者写；
+	2,mode_READABLE;只允许读；
+	3,mode_WRITEABLE;只允许写；
+文件中权限:
+	---------
+	第一个-代表是文件夹还是文件，是文件夹用d 如：d-- --- ---，第二到三个位置代表当前用户，也就是该程序的读写权限，一般都是可读可写，如：dwr --- ---；第四到六代表用户组的读写权限；最后三个代表其他用户是否可读可写；若是dwr-- --- -w-表示其他程序可写；-wr --- --r表示其他程序可读；
+每一个程序默认读写保护，就是说每一个程序在默认状态下都是不能被其他程序读或者写，在Android4.1以上版本读写sdcard也是需要读写权限的，要将文件写入到sdcard中需要先获取权限。
+
+操作sharepreference 
+
+通过new 一个sharepreference对象，如 context.sharepreference("文件名",权限);来将文件存入到/data/data/包名/shared_prefs/目录下
+=============================================================
+面试相关
+=============================================================
+
+------------------------------------------------------------------------------------------------------
+   1->泛型。
+------------------------------------------------------------------------------------------------------
+泛型是对java语言的类型系统的一种扩展，来支持创建的类型进行参数化的类，可以把类型参数看作是使用参数化类型时制定的类型的一个占位符，就像方法的形式参数是运行传递的值的占位符一样。
+泛型的好处很多：1，不需要依赖强制类型转换，泛型的一个好处就是可以消除源代码中的许多强制类型转换，这使得代码可读性增强，减少出错的机会。
+	            2，泛型可以增强代码的重用性，通过先将要重用的类使用泛型，在其他类要引用时直接定义具体类型就可以实现不同类使用同一个基类。如：定义  class baseDao<T>{
+	public void save(T t);
+	public void delete(T t);
+
+}
+你只需要用其他类继承该类同时定义具体类型就够了：class userDao extends baseDao<User>{}。
+	            
+----------------------------------------------------------------------------------------------------------
+   1->.List、map、set区别、用法
+-----------------------------------------------------------------------------------------------------------
+	1.说到list /set,就要先说collection接口，在collection中声明了适用于java集合的通用方法（add(),size(),iterator())，set和list都继承了collection，任何集合不允许直接继承collection
+	而list提供有序的元素存放，允许元素重复。set则无序，也不允许重复。list下有arrayList，linkedlist，vector。arrayList和linkedlist是线程不安全的，vector线程安全，但是效率低。
+
+	arrylist：线程不安全，允许元素为空，允许元素重复,具有下标，查找快，增删慢，因为list内部数据结构为数组，所以是连续内存空间，查找速度快，操作少，而在插入删除时需要在插入删除点前后移动数据，操作多，速度慢。默认初始容量为10，如果确定要加入元素大小范围，可以使用ensureCapacity方法来确定初始容量，这可以减少递增式再分配的数量，可提高效率。 arraylist自增策略是 new=old+old>>1(也就是old+old/2=new)。增加50%。ArrayList在元素填满容器时会自动扩充容器大小的50%，而Vector则是100%
+	linkedlist：内部数据结构为双向链表，也是线程不安全的。因为是链表，多少查找速度都不如arraylist，但是增删快。
+	vector：vector和arraylist很像，默认初始容量也是10，但是vector是线程安全的，所以速度慢于arraylist。
+
+	set下有hashset（底层由hashmap实现），linkedhashset，treeset（底层使用平衡二叉树）。
+	hashset：hashset底层是由hashmap实现的（通过定义一个虚拟的object来将hashmap的value给占掉），元素是无序的，不允许重复，但是允许元素为空。因为是由hashmap实现，基本方法都是调用	hashmap来实现。
+	linkedhashset：linkedhashset是有hash表和链表实现，并且定义了迭代顺序，该顺序可以是插入顺序或者访问顺序。linkedhashset不是线程同步的，继承hashset，基本实现都是调用hashset。
+	而map没有继承collection接口，他是提供一种key到value的映射的键值对的形式。map下有hashmap，linkedhashmap，treemap。
+	linkedhashmap：对于LinkedHashMap而言，它继承与HashMap、底层使用哈希表与双向链表来保存所有元素。其基本操作与父类HashMap相似，它通过重写父类相关的方法，来实现自己的链接列表特	性。他也是线程不同步的，不保证映射的顺序。
+	
+	hashtable：于hashmap很相似但是hashtable继承的是Dictionary，他是线程同步的，初始容量为11，默认加载因子问0.75.不允许键值对为空。因为线程安全，所以性能比hashmap低。
+	区别：hashtable不允许为空，而hashmap可以，hashtable继承dictionary，而hashmap实现map继承abstractMap，hashtable是线程安全，hashmap不安全，hashtablecontians方法，而hashmap为了防止歧义使用containskey containsvalue方法。 在扩容方面，hashmap是原来的两倍，而hashtable是两倍加一，在获取hash表index上面也不同，hashmap是将hash&length-1，减小冲突，而hashtable是hash&一个定值相与。
+
+----------------------------------------------------------------------------------------------------------------------
+Spring定义了一下几种事务传播方式：
+----------------------------------------------------------------------------------------------------------------------
+PROPAGATION_REQUIRED        支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。
+PROPAGATION_SUPPORTS            支持当前事务，如果当前没有事务，就以非事务方式执行。
+PROPAGATION_MANDATORY         支持当前事务，如果当前没有事务，就抛出异常。
+ 
+ 
+PROPAGATION_REQUIRES_NEW     新建事务，如果当前存在事务，把当前事务挂起。
+PROPAGATION_NOT_SUPPORTED   以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
+PROPAGATION_NEVER                 以非事务方式执行，如果当前存在事务，则抛出异常。
+PROPAGATION_NESTED            如果当前事务存在，则以嵌套事务的方式执行。否则就按照它自己的事务方式执行。
+--------------------------------------------------------------------------------------------------------------------------------
+SpringMVC工作原理
+--------------------------------------------------------------------------------------------------------------------------------
+
+1.当http请求到达dispatcherServlet时，通过在web.xml中的配置拦截方式（一般是拦截所有）拦截request请求。
+2.接着dispatcherServlet查询handlerMapping（一般的handlerMapping有simpleUrlHandlerMapping和DefaultAnnotionHandlerMapping），我们可以为dispatcherServlet提供多个HandlerMapping供其使用，dispatcherServlet会根据你配置的HandlerMapping的优先级来依次调用，直到能找到匹配的Handler，这个Handler一般是在spring注册的bean对象。通过这个Handler定位到controller类，要定义到具体的方法还有使用到HandlerAdapter，这个adapter会根据返回的Handler和传的参数、method和requestMapping来定位到具体方法。
+3.通过传过来的参数等执行方法，返回modelAndView，dispatcherServlet通过视图解析器解析modelAndView返回页面。
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+Git和github使用笔记
+---------------------------------------------------------------------------------------------------------------------------------
+命令：
+	1.git add xxx文件，添加某个文件到版本库也就是仓库中repository（添加所有修改过或新增的文件之间 git add .     ）
+	2.ssh-keygen  -t rsa –C “youremail@example.com”，重新生成一个sshkey
+	 mkdir：         XX (创建一个空目录 XX指目录名)
+
+   pwd：          显示当前目录的路径。
+
+   git init          把当前的目录变成可以管理的git仓库，生成隐藏.git文件。
+
+   git add XX       把xx文件添加到暂存区去。
+
+   git commit –m “XX”  提交文件 –m 后面的是注释。
+
+   git status        查看仓库状态
+
+   git diff  XX      查看XX文件修改了那些内容
+
+   git log          查看历史记录
+
+   git reset  –- hard HEAD^ 或者 git reset  –- hard HEAD~ 回退到上一个版本
+
+                        (如果想回退到100个版本，使用git reset –hard HEAD~100 )
+
+   cat XX         查看XX文件内容
+
+   git reflog       查看历史记录的版本号id
+
+   git checkout — XX  把XX文件在工作区的修改全部撤销。
+
+   git rm XX          删除XX文件
+
+   git remote add origin https://github.com/tugenhua0707/testgit 关联一个远程库
+
+   git push –u(第一次要用-u 以后不需要) origin master 把当前master分支推送到远程库
+
+   git clone https://github.com/tugenhua0707/testgit  从远程库中克隆
+
+   git checkout –b dev  创建dev分支 并切换到dev分支上
+
+   git branch  查看当前所有的分支
+
+   git checkout master 切换回master分支
+
+   git merge dev    在当前的分支上合并dev分支
+
+   git branch –d dev 删除dev分支
+
+   git branch name  创建分支
+
+   git stash 把当前的工作隐藏起来 等以后恢复现场后继续工作
+
+   git stash list 查看所有被隐藏的文件列表
+
+   git stash apply 恢复被隐藏的文件，但是内容不删除
+
+   git stash drop 删除文件
+
+   git stash pop 恢复文件的同时 也删除文件
+
+   git remote 查看远程库的信息
+
+   git remote –v 查看远程库的详细信息
+
+   git push origin master  Git会把master分支推送到远程库对应的远程分支上
+
+
+----------------------------------------------------------------------------------------
+springmvc
+-----------------------------------------------------------------------------------------
+1.当使用ajax提交请求时，使用@responseBody注解来强调是返回数据而不是返回某个视图页面。
